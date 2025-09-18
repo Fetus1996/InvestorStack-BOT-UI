@@ -5,6 +5,8 @@ from fastapi.responses import FileResponse
 import os
 import json
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
 # Import API routes
 from backend.api.routes_status import router as status_router
@@ -126,10 +128,10 @@ async def startup_event():
             max_exposure=0.05,
             zones=[],
             enabled=False,
-            mode="sim",
-            exchange="okx",
+            mode=os.getenv("MODE", "sim"),
+            exchange=os.getenv("EXCHANGE", "okx"),
             network="live",
-            symbol="BTC/USDT"
+            symbol=os.getenv("SYMBOL", "BTC/USDT")
         )
         await bot_service.initialize(config)
         logger.info("Bot initialized with default configuration")
