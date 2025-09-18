@@ -2,6 +2,26 @@
 
 A comprehensive Static Grid trading system with support for OKX and Bitkub exchanges, featuring both Real and Simulation modes, complete with a web UI for monitoring and control.
 
+## ⚠️ Important Setup Notes
+
+**Before using this bot, please ensure:**
+
+1. **Position Size Minimums:**
+   - Bitkub: Minimum 0.0001 BTC per order
+   - OKX: Minimum 0.00001 BTC per order
+
+2. **Balance Requirements:**
+   - Have sufficient balance for buy orders (THB for Bitkub, USDT for OKX)
+   - Consider having some base currency (BTC/ETH) for sell orders
+
+3. **API Permissions:**
+   - Enable trading permissions on your exchange account
+   - Use IP restrictions for security
+
+4. **Grid Configuration:**
+   - Ensure grid range covers current market price
+   - Test with simulation mode first
+
 ## Features
 
 - **Static Grid Trading**: Automatically places buy/sell orders at predetermined price levels
@@ -273,6 +293,41 @@ grid-bot/
 ├── Makefile             # Build commands
 └── README.md            # This file
 ```
+
+## Troubleshooting
+
+### Orders Not Being Created
+
+1. **Check Position Size**:
+   - Bitkub: Must be ≥ 0.0001 BTC
+   - OKX: Must be ≥ 0.00001 BTC
+
+2. **Check Balance**:
+   - Insufficient THB/USDT for buy orders
+   - Insufficient BTC/ETH for sell orders
+
+3. **Check Grid Configuration**:
+   - Grid range must cover current market price
+   - Price levels must match exchange tick sizes
+
+4. **Check Bot Status**:
+   - Bot must be RUNNING (not STOPPED)
+   - Check logs for error messages
+
+5. **Config Not Updating**:
+   - Restart the bot server after major config changes
+   - Check if API returns validation errors
+
+### API Connection Issues
+
+1. **Check API Keys**:
+   - Correct API key and secret
+   - Trading permissions enabled
+   - IP restrictions configured properly
+
+2. **Exchange Specific**:
+   - Bitkub: Use Thai IP or VPN
+   - OKX: Check if demo/live network matches
 
 ## Safety Features
 

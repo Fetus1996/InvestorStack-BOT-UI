@@ -29,7 +29,7 @@ class ExchangeValidator:
         },
         "bitkub": {
             "THB_BTC": {
-                "min_size": 0.0001,
+                "min_size": 0.00000001,  # No actual min size, just very small for validation
                 "min_value": 10.0,
                 "size_step": 0.00000001,
                 "price_tick": 0.01

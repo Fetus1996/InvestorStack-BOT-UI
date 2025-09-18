@@ -50,6 +50,45 @@ async def get_config():
 async def update_config(config: GridConfig, db: Session = Depends(get_db)):
     """Update grid configuration."""
     try:
+        # Validate config against exchange requirements
+        from ..engine.exchange_validator import ExchangeValidator
+
+        # Get current market price for validation
+        try:
+            if config.exchange == "bitkub":
+                from ..engine.exchange_bitkub import BitkubExchange
+                exchange_instance = BitkubExchange()
+                await exchange_instance.load_markets()
+                ticker = await exchange_instance.fetch_ticker(config.symbol)
+                current_price = ticker['last']
+                await exchange_instance.close()
+            else:
+                from ..engine.exchange_okx_ccxt import OKXExchange
+                exchange_instance = OKXExchange()
+                await exchange_instance.load_markets()
+                ticker = await exchange_instance.fetch_ticker(config.symbol)
+                current_price = ticker['last']
+                await exchange_instance.close()
+
+            is_valid, error_msg = ExchangeValidator.validate_order(
+                config.exchange,
+                config.symbol,
+                config.position_size,
+                current_price
+            )
+
+            if not is_valid and "Order size" in error_msg:
+                # Only block if it's a size issue, not value issue (which depends on actual market price)
+                return APIResponse(success=False, error=f"Invalid position_size: {error_msg}")
+
+        except Exception as e:
+            # If can't fetch price, just check minimum size requirement only
+            reqs = ExchangeValidator.REQUIREMENTS.get(config.exchange, {}).get(config.symbol, {})
+            min_size = reqs.get("min_size", 0)
+            if min_size > 0 and config.position_size < min_size:
+                return APIResponse(success=False, error=f"Position size {config.position_size} is below minimum {min_size} BTC for {config.symbol}")
+            # Continue if validation fails due to network issues
+
         # Validate config
         config_dict = config.model_dump()
 

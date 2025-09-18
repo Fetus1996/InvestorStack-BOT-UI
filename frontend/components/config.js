@@ -41,13 +41,23 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     const positionSize = formData.get('position_size');
     const maxExposure = formData.get('max_exposure');
 
+    // Validate position size based on exchange
+    const exchange = formData.get('exchange');
+    const positionSizeValue = parseFloat(positionSize);
+    const minSize = exchange === 'bitkub' ? 0.0001 : 0.00001;
+
+    if (positionSizeValue < minSize) {
+        alert(`Position size must be at least ${minSize} for ${exchange.toUpperCase()}`);
+        return;
+    }
+
     const config = {
         upper_bound: parseFloat(formData.get('upper_bound')),
         lower_bound: parseFloat(formData.get('lower_bound')),
         total_levels: parseInt(formData.get('total_levels')),
         spacing_type: formData.get('spacing_type'),
         spacing_value: 0, // Auto-calculated
-        position_size: parseFloat(positionSize),
+        position_size: positionSizeValue,
         max_exposure: parseFloat(maxExposure),
         mode: formData.get('mode'),
         exchange: formData.get('exchange'),
@@ -101,6 +111,8 @@ async function saveConfig(config) {
             }
 
             fetchStatus();
+        } else {
+            showNotification(result.error || 'Failed to save configuration', 'error');
         }
     } catch (error) {
         showNotification('Failed to save configuration', 'error');
@@ -111,7 +123,22 @@ async function saveConfig(config) {
 document.getElementById('exchange').addEventListener('change', (e) => {
     updateNetworkVisibility(e.target.value);
     updateSymbolHint(e.target.value);
+    updatePositionSizeConstraints(e.target.value);
 });
+
+// Update position size constraints
+function updatePositionSizeConstraints(exchange) {
+    const positionSizeInput = document.getElementById('position-size');
+    if (exchange === 'bitkub') {
+        positionSizeInput.min = '0.0001';
+        positionSizeInput.step = '0.0001';
+        positionSizeInput.placeholder = 'Min: 0.0001 BTC';
+    } else {
+        positionSizeInput.min = '0.00001';
+        positionSizeInput.step = '0.00001';
+        positionSizeInput.placeholder = 'Min: 0.00001 BTC';
+    }
+}
 
 // Update network visibility
 function updateNetworkVisibility(exchange) {
