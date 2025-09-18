@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  grid-bot:
+    build: .
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./.env:/app/.env
+      - ./config.json:/app/config.json
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+    command: uvicorn backend.app:app --host 0.0.0.0 --port 9000 --reload
+    restart: unless-stopped

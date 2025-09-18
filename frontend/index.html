@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Trading Bot</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Grid Trading Bot</h1>
+            <div class="status-bar">
+                <span class="status-indicator" id="bot-status">STOPPED</span>
+                <span class="mode-indicator" id="bot-mode">SIM</span>
+                <span class="exchange-indicator" id="exchange-name">OKX</span>
+                <span class="network-indicator" id="network-type">LIVE</span>
+                <span class="ws-status" id="ws-status">⚪</span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-button" data-tab="config">Config</button>
+            <button class="tab-button" data-tab="keys">API Keys</button>
+            <button class="tab-button" data-tab="logs">Logs</button>
+        </nav>
+
+        <main>
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard-tab">
+                <!-- Active API Indicator -->
+                <div class="dashboard-api-indicator">
+                    <span class="api-label">Active API:</span>
+                    <span id="dashboard-exchange" class="api-value">-</span>
+                    <span id="dashboard-api-status" class="api-badge">-</span>
+                </div>
+
+                <div class="control-panel">
+                    <button class="btn btn-primary" id="start-btn">Start Bot</button>
+                    <button class="btn btn-danger" id="stop-btn">Stop Bot</button>
+                    <button class="btn btn-warning" id="reset-btn">Reset Grid</button>
+                    <button class="btn btn-secondary" id="clear-btn">Clear Orders</button>
+                    <button class="btn btn-info" id="manual-sync-btn">Manual Sync</button>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3>Open Orders</h3>
+                        <div class="metric-value" id="open-orders-count">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Active Levels</h3>
+                        <div class="metric-value" id="active-levels-count">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Portfolio Value</h3>
+                        <div class="metric-value" id="portfolio-value-thb">-</div>
+                    </div>
+                </div>
+
+                <div class="grid-view">
+                    <h2>Grid Levels</h2>
+                    <div class="zone-controls">
+                        <h3>Zone Controls</h3>
+                        <div id="zone-toggles"></div>
+                    </div>
+                    <table id="grid-levels-table">
+                        <thead>
+                            <tr>
+                                <th>Level</th>
+                                <th>Price</th>
+                                <th>Side</th>
+                                <th>Zone</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grid-levels-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Config Tab -->
+            <div class="tab-content" id="config-tab">
+                <h2>Grid Configuration</h2>
+                <form id="config-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="upper-bound">Upper Bound</label>
+                            <input type="number" id="upper-bound" name="upper_bound" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lower-bound">Lower Bound</label>
+                            <input type="number" id="lower-bound" name="lower_bound" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="total-levels">Total Levels</label>
+                            <input type="number" id="total-levels" name="total_levels" min="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="spacing-type">Spacing Type</label>
+                            <select id="spacing-type" name="spacing_type">
+                                <option value="fixed">Fixed</option>
+                                <option value="percent">Percent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="position-size">Position Size</label>
+                            <input type="number" id="position-size" name="position_size" step="0.00000001" min="0.00000001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="max-exposure">Max Exposure</label>
+                            <input type="number" id="max-exposure" name="max_exposure" step="0.00000001" min="0.00000001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="mode">Mode</label>
+                            <select id="mode" name="mode">
+                                <option value="sim">Simulation</option>
+                                <option value="real">Real</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="exchange">Exchange</label>
+                            <select id="exchange" name="exchange">
+                                <option value="okx">OKX</option>
+                                <option value="bitkub">Bitkub</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="network-group">
+                            <label for="network">Network (OKX)</label>
+                            <select id="network" name="network">
+                                <option value="live">Live</option>
+                                <option value="demo">Demo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="symbol">Symbol</label>
+                            <input type="text" id="symbol" name="symbol" placeholder="BTC/USDT" required>
+                            <small id="symbol-hint">OKX: BTC/USDT | Bitkub: THB_BTC</small>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="enabled">
+                                <input type="checkbox" id="enabled" name="enabled">
+                                Bot Enabled
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </form>
+            </div>
+
+            <!-- API Keys Tab -->
+            <div class="tab-content" id="keys-tab">
+                <h2>API Keys Configuration</h2>
+
+                <!-- API Management Buttons (shown when keys exist) -->
+                <div id="api-management-buttons" style="display: none; margin-bottom: 20px;">
+                    <button class="btn-edit-api" id="standalone-edit-btn" title="Edit API Keys">✏️ Edit Keys</button>
+                    <button class="btn-delete-api" id="standalone-delete-btn" title="Delete API Keys">🗑️ Delete Keys</button>
+                </div>
+
+                <!-- Current Active API Status -->
+                <div class="active-api-status">
+                    <div class="api-status-header">
+                        <h3>Currently Active API</h3>
+                        <div class="api-header-buttons">
+                            <button class="btn-edit-api" id="edit-api-btn" title="Switch to different API">✏️ Edit</button>
+                            <button class="btn-delete-api" id="delete-api-btn" title="Delete API Keys">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div id="active-api-info">
+                        <span class="label">Exchange:</span> <span id="active-exchange">-</span><br>
+                        <span class="label">API Status:</span> <span id="active-api-status">-</span><br>
+                        <span class="label">Symbol:</span> <span id="active-symbol">-</span>
+                    </div>
+                </div>
+
+                <!-- Edit API Section (Hidden by default) -->
+                <div id="edit-api-section" class="edit-api-section" style="display: none;">
+                    <h3>Edit API Credentials</h3>
+                    <form id="edit-api-form">
+                        <div class="form-group">
+                            <label for="edit-exchange">Exchange</label>
+                            <select id="edit-exchange" name="exchange">
+                                <option value="okx">OKX</option>
+                                <option value="bitkub">Bitkub</option>
+                            </select>
+                        </div>
+
+                        <!-- OKX Edit Fields -->
+                        <div id="edit-okx-fields" class="exchange-fields">
+                            <div class="form-group">
+                                <label for="edit-okx-api-key">API Key</label>
+                                <input type="text" id="edit-okx-api-key" name="okx_api_key" placeholder="Enter OKX API Key">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-okx-api-secret">API Secret</label>
+                                <input type="password" id="edit-okx-api-secret" name="okx_api_secret" placeholder="Enter OKX API Secret">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-okx-passphrase">Passphrase</label>
+                                <input type="password" id="edit-okx-passphrase" name="okx_passphrase" placeholder="Enter OKX Passphrase">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-okx-network">Network</label>
+                                <select id="edit-okx-network" name="network">
+                                    <option value="live">Live</option>
+                                    <option value="demo">Demo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Bitkub Edit Fields -->
+                        <div id="edit-bitkub-fields" class="exchange-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="edit-bitkub-api-key">API Key</label>
+                                <input type="text" id="edit-bitkub-api-key" name="bitkub_api_key" placeholder="Enter Bitkub API Key">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-bitkub-api-secret">API Secret</label>
+                                <input type="password" id="edit-bitkub-api-secret" name="bitkub_api_secret" placeholder="Enter Bitkub API Secret">
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary">Update API</button>
+                            <button type="button" class="btn btn-warning" id="test-edit-connection">Test Connection</button>
+                            <button type="button" class="btn btn-secondary" id="cancel-edit">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="exchange-selector">
+                    <label>Configure API for:</label>
+                    <select id="keys-exchange">
+                        <option value="okx">OKX</option>
+                        <option value="bitkub">Bitkub</option>
+                    </select>
+                </div>
+
+                <form id="keys-form">
+                    <!-- OKX Fields -->
+                    <div id="okx-fields" class="exchange-fields">
+                        <div class="form-group">
+                            <label for="okx-api-key">API Key</label>
+                            <input type="text" id="okx-api-key" name="okx_api_key">
+                        </div>
+                        <div class="form-group">
+                            <label for="okx-api-secret">API Secret</label>
+                            <input type="password" id="okx-api-secret" name="okx_api_secret">
+                        </div>
+                        <div class="form-group">
+                            <label for="okx-passphrase">Passphrase</label>
+                            <input type="password" id="okx-passphrase" name="okx_passphrase">
+                        </div>
+                        <div class="form-group">
+                            <label for="okx-network">Network</label>
+                            <select id="okx-network" name="network">
+                                <option value="live">Live</option>
+                                <option value="demo">Demo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Bitkub Fields -->
+                    <div id="bitkub-fields" class="exchange-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="bitkub-api-key">API Key</label>
+                            <input type="text" id="bitkub-api-key" name="bitkub_api_key">
+                        </div>
+                        <div class="form-group">
+                            <label for="bitkub-api-secret">API Secret</label>
+                            <input type="password" id="bitkub-api-secret" name="bitkub_api_secret">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Save API Keys</button>
+                        <button type="button" class="btn btn-secondary" id="test-connection">Test Connection</button>
+                    </div>
+                </form>
+
+                <div id="connection-status" class="connection-status" style="display: none;">
+                    <h3>Connection Status</h3>
+                    <div id="connection-result"></div>
+                </div>
+
+                <div class="info-box">
+                    <h3>Security Notes</h3>
+                    <ul>
+                        <li>API keys are stored in the .env file with restricted permissions</li>
+                        <li>Never share your API keys with anyone</li>
+                        <li>Use API keys with trading permissions only</li>
+                        <li>For OKX Demo mode, use demo account API keys</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div class="tab-content" id="logs-tab">
+                <h2>Action Logs</h2>
+                <div class="log-controls">
+                    <button class="btn btn-secondary" id="refresh-logs">Refresh</button>
+                    <select id="log-filter">
+                        <option value="">All Actions</option>
+                        <option value="START">Start</option>
+                        <option value="STOP">Stop</option>
+                        <option value="RESET">Reset</option>
+                        <option value="CONFIG_CHANGED">Config Changed</option>
+                        <option value="ZONE_TOGGLED">Zone Toggled</option>
+                    </select>
+                </div>
+                <div class="logs-container">
+                    <table id="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>User</th>
+                                <th>Mode</th>
+                                <th>Details</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+    <!-- Scripts -->
+    <script src="components/modal.js"></script>
+    <script src="components/dashboard.js"></script>
+    <script src="components/config.js"></script>
+    <script src="components/keys.js"></script>
+    <script src="components/logs.js"></script>
+    <script src="components/manual-sync.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
