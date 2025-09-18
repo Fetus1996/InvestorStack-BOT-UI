@@ -44,7 +44,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     // Validate position size based on exchange
     const exchange = formData.get('exchange');
     const positionSizeValue = parseFloat(positionSize);
-    const minSize = exchange === 'bitkub' ? 0.0001 : 0.00001;
+    const minSize = exchange === 'bitkub' ? 0.000003 : 0.00001;
 
     if (positionSizeValue < minSize) {
         alert(`Position size must be at least ${minSize} for ${exchange.toUpperCase()}`);
@@ -130,9 +130,9 @@ document.getElementById('exchange').addEventListener('change', (e) => {
 function updatePositionSizeConstraints(exchange) {
     const positionSizeInput = document.getElementById('position-size');
     if (exchange === 'bitkub') {
-        positionSizeInput.min = '0.0001';
-        positionSizeInput.step = '0.0001';
-        positionSizeInput.placeholder = 'Min: 0.0001 BTC';
+        positionSizeInput.min = '0.000003';
+        positionSizeInput.step = '0.000001';
+        positionSizeInput.placeholder = 'Min: 0.000003 BTC';
     } else {
         positionSizeInput.min = '0.00001';
         positionSizeInput.step = '0.00001';

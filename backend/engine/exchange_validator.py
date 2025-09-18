@@ -29,7 +29,7 @@ class ExchangeValidator:
         },
         "bitkub": {
             "THB_BTC": {
-                "min_size": 0.00000001,  # No actual min size, just very small for validation
+                "min_size": 0.000003,  # ~0.000003 BTC (10 THB) for Bitkub
                 "min_value": 10.0,
                 "size_step": 0.00000001,
                 "price_tick": 0.01
@@ -71,16 +71,21 @@ class ExchangeValidator:
 
         # Check size step
         if reqs["size_step"] > 0:
-            remainder = size % reqs["size_step"]
-            if remainder > reqs["size_step"] * 0.00001:  # Proportional tolerance
-                return False, f"Order size {size} doesn't match step size {reqs['size_step']}"
+            # Use proper floating point comparison
+            steps = round(size / reqs["size_step"])
+            expected_size = steps * reqs["size_step"]
+            tolerance = reqs["size_step"] * 0.001  # 0.1% tolerance
+            if abs(size - expected_size) > tolerance:
+                return False, f"Order size {size} doesn't match step size {reqs['size_step']} (expected: {expected_size})"
 
         # Check price tick
         if reqs["price_tick"] > 0:
-            # Round to avoid floating point precision issues
-            rounded_price = round(price / reqs["price_tick"]) * reqs["price_tick"]
-            if abs(price - rounded_price) > reqs["price_tick"] * 0.01:  # 1% tolerance
-                return False, f"Price {price} doesn't match tick size {reqs['price_tick']}"
+            # Use proper floating point comparison
+            ticks = round(price / reqs["price_tick"])
+            expected_price = ticks * reqs["price_tick"]
+            tolerance = reqs["price_tick"] * 0.001  # 0.1% tolerance
+            if abs(price - expected_price) > tolerance:
+                return False, f"Price {price} doesn't match tick size {reqs['price_tick']} (expected: {expected_price})"
 
         return True, ""
 

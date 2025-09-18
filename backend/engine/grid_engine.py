@@ -61,7 +61,6 @@ class GridEngine:
         if self.config.mode == "sim":
             mid_price = (self.config.upper_bound + self.config.lower_bound) / 2
             self.exchange = SimulatedExchange(initial_price=mid_price)
-            await state_manager.set_state("SIM_RUNNING")
         else:
             if self.config.exchange == "okx":
                 self.exchange = OKXExchange()
