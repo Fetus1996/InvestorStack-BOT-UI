@@ -4,12 +4,26 @@ __pycache__/
 *.pyo
 *.pyd
 
-# System files
-.DS_Store
-Thumbs.db
+# Environment
+.env
+.env.*
+
+# Config / Secrets
+config.json
+
+# Databases
+*.db
 
 # Logs
 *.log
 
-# Environment variables
-.env
+# Node / Frontend
+node_modules/
+dist/
+build/
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
