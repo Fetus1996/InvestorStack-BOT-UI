@@ -1,5 +1,5 @@
 from typing import Literal, List, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from decimal import Decimal
 
 
@@ -10,11 +10,11 @@ class ZoneDef(BaseModel):
     level_end: int
     enabled: bool = True
 
-    @field_validator('level_end')
-    def validate_level_range(cls, v, values):
-        if 'level_start' in values.data and v < values.data['level_start']:
+    @model_validator(mode='after')
+    def validate_level_range(self):
+        if self.level_end < self.level_start:
             raise ValueError('level_end must be >= level_start')
-        return v
+        return self
 
 
 class GridConfig(BaseModel):
@@ -33,17 +33,17 @@ class GridConfig(BaseModel):
     network: Optional[Literal["live", "demo"]] = "live"
     symbol: str = "BTC/USDT"
 
-    @field_validator('upper_bound')
-    def validate_bounds(cls, v, values):
-        if 'lower_bound' in values.data and v <= values.data['lower_bound']:
+    @model_validator(mode='after')
+    def validate_bounds(self):
+        if self.upper_bound <= self.lower_bound:
             raise ValueError('upper_bound must be > lower_bound')
-        return v
+        return self
 
-    @field_validator('network')
-    def validate_network(cls, v, values):
-        if 'exchange' in values.data and values.data['exchange'] == 'bitkub' and v == 'demo':
+    @model_validator(mode='after')
+    def validate_network(self):
+        if self.exchange == 'bitkub' and self.network == 'demo':
             raise ValueError('Bitkub does not support demo network')
-        return v
+        return self
 
 
 class RuntimeState(BaseModel):
